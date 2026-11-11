@@ -1,0 +1,108 @@
+{
+  "examples": [
+    {
+      "id": "ex_order_count",
+      "question": "How many orders are in the database?",
+      "sql": "SELECT count(*) AS order_count FROM orders",
+      "tables": ["orders"],
+      "metrics": ["order_count"],
+      "notes": "Counts all statuses, including canceled and unavailable."
+    },
+    {
+      "id": "ex_customer_count",
+      "question": "How many unique customers exist?",
+      "sql": "SELECT count(DISTINCT customer_unique_id) AS customer_count FROM customers",
+      "tables": ["customers"],
+      "metrics": ["customer_count"],
+      "notes": "Uses customer_unique_id (people), not customer_id (order-side records)."
+    },
+    {
+      "id": "ex_top_categories_by_items",
+      "question": "What are the top five product categories by order-item count?",
+      "sql": "SELECT COALESCE(t.product_category_name_english, p.product_category_name, '(unknown)') AS category, count(*) AS item_count FROM order_items i JOIN products p ON p.product_id = i.product_id LEFT JOIN product_category_translation t ON t.product_category_name = p.product_category_name GROUP BY 1 ORDER BY item_count DESC LIMIT 5",
+      "tables": ["order_items", "products", "product_category_translation"],
+      "metrics": [],
+      "notes": "LEFT JOIN because 2 categories lack translations; COALESCE falls back to the Portuguese name, then '(unknown)' for NULL categories."
+    },
+    {
+      "id": "ex_average_order_value",
+      "question": "What is the average order value under the documented metric definition?",
+      "sql": "SELECT round(sum(payment_value) / count(DISTINCT order_id), 2) AS average_order_value FROM order_payments",
+      "tables": ["order_payments"],
+      "metrics": ["average_order_value"],
+      "notes": "Payment-based AOV including freight; excludes the one order without payments; includes payments of canceled orders (see glossary caveats)."
+    },
+    {
+      "id": "ex_canceled_orders",
+      "question": "How many orders were cancelled?",
+      "sql": "SELECT count(*) AS canceled_orders FROM orders WHERE order_status = 'canceled'",
+      "tables": ["orders"],
+      "metrics": [],
+      "notes": "'unavailable' orders are a separate outcome and are not counted here."
+    },
+    {
+      "id": "ex_gross_item_value",
+      "question": "What is the total gross item value?",
+      "sql": "SELECT sum(price) AS gross_item_value FROM order_items",
+      "tables": ["order_items"],
+      "metrics": ["gross_item_value"],
+      "notes": "Merchandise value only, excludes freight. Not net revenue."
+    },
+    {
+      "id": "ex_freight_value",
+      "question": "What is the total freight value charged?",
+      "sql": "SELECT sum(freight_value) AS total_freight_value FROM order_items",
+      "tables": ["order_items"],
+      "metrics": ["freight_value"],
+      "notes": "Sum of per-item shipping allocations."
+    },
+    {
+      "id": "ex_delivered_orders",
+      "question": "How many orders were delivered?",
+      "sql": "SELECT count(*) AS delivered_orders FROM orders WHERE order_status = 'delivered'",
+      "tables": ["orders"],
+      "metrics": ["delivered_orders"],
+      "notes": "Status-based count; includes the 8 delivered orders with NULL delivery date."
+    },
+    {
+      "id": "ex_cancellation_rate",
+      "question": "What is the cancellation rate?",
+      "sql": "SELECT round(100.0 * count(*) FILTER (WHERE order_status = 'canceled') / count(*), 2) AS cancellation_rate_pct FROM orders",
+      "tables": ["orders"],
+      "metrics": ["cancellation_rate"],
+      "notes": "Canceled orders as a percentage of all orders."
+    },
+    {
+      "id": "ex_average_delivery_time",
+      "question": "What is the average delivery time in days?",
+      "sql": "SELECT round(avg(EXTRACT(EPOCH FROM (order_delivered_customer_date - order_purchase_timestamp)) / 86400.0), 2) AS avg_delivery_days FROM orders WHERE order_status = 'delivered' AND order_delivered_customer_date IS NOT NULL",
+      "tables": ["orders"],
+      "metrics": ["average_delivery_time"],
+      "notes": "Purchase-to-door days for delivered orders with a delivery timestamp."
+    },
+    {
+      "id": "ex_review_score",
+      "question": "What is the average review score?",
+      "sql": "SELECT round(avg(review_score), 2) AS avg_review_score FROM order_reviews",
+      "tables": ["order_reviews"],
+      "metrics": ["review_score"],
+      "notes": "Mean over review rows on a 1-5 scale; per-review, not per-order."
+    },
+    {
+      "id": "ex_revenue_by_category",
+      "question": "Which five product categories generated the highest revenue?",
+      "sql": "SELECT COALESCE(t.product_category_name_english, p.product_category_name, '(unknown)') AS category, sum(i.price) AS gross_item_value FROM order_items i JOIN products p ON p.product_id = i.product_id LEFT JOIN product_category_translation t ON t.product_category_name = p.product_category_name GROUP BY 1 ORDER BY gross_item_value DESC LIMIT 5",
+      "tables": ["order_items", "products", "product_category_translation"],
+      "metrics": ["gross_item_value"],
+      "notes": "'Revenue' is interpreted as gross item value per the glossary (merchandise, excludes freight, gross of refunds). The answer must state this interpretation."
+    },
+    {
+      "id": "ex_monthly_orders",
+      "question": "How many orders were placed per month?",
+      "sql": "SELECT date_trunc('month', order_purchase_timestamp)::date AS month, count(*) AS order_count FROM orders GROUP BY 1 ORDER BY 1",
+      "tables": ["orders"],
+      "metrics": ["order_count"],
+      "notes": "Time series suitable for a line chart (Phase 7)."
+    }
+  ]
+}

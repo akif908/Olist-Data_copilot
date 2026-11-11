@@ -1,0 +1,346 @@
+{
+  "results": {
+    "ex_order_count": {
+      "id": "ex_order_count",
+      "columns": [
+        "order_count"
+      ],
+      "row_count": 1,
+      "rows": [
+        [
+          99441
+        ]
+      ],
+      "rows_truncated": false,
+      "scalar": 99441,
+      "duration_ms": 13.6,
+      "verified_at": "2026-11-11T11:55:38.760910+00:00"
+    },
+    "ex_customer_count": {
+      "id": "ex_customer_count",
+      "columns": [
+        "customer_count"
+      ],
+      "row_count": 1,
+      "rows": [
+        [
+          96096
+        ]
+      ],
+      "rows_truncated": false,
+      "scalar": 96096,
+      "duration_ms": 31.8,
+      "verified_at": "2026-11-11T11:55:38.793012+00:00"
+    },
+    "ex_top_categories_by_items": {
+      "id": "ex_top_categories_by_items",
+      "columns": [
+        "category",
+        "item_count"
+      ],
+      "row_count": 5,
+      "rows": [
+        [
+          "bed_bath_table",
+          11115
+        ],
+        [
+          "health_beauty",
+          9670
+        ],
+        [
+          "sports_leisure",
+          8641
+        ],
+        [
+          "furniture_decor",
+          8334
+        ],
+        [
+          "computers_accessories",
+          7827
+        ]
+      ],
+      "rows_truncated": false,
+      "scalar": null,
+      "duration_ms": 147.0,
+      "verified_at": "2026-11-11T11:55:38.940094+00:00"
+    },
+    "ex_average_order_value": {
+      "id": "ex_average_order_value",
+      "columns": [
+        "average_order_value"
+      ],
+      "row_count": 1,
+      "rows": [
+        [
+          "160.99"
+        ]
+      ],
+      "rows_truncated": false,
+      "scalar": "160.99",
+      "duration_ms": 93.8,
+      "verified_at": "2026-11-11T11:55:39.034274+00:00"
+    },
+    "ex_canceled_orders": {
+      "id": "ex_canceled_orders",
+      "columns": [
+        "canceled_orders"
+      ],
+      "row_count": 1,
+      "rows": [
+        [
+          625
+        ]
+      ],
+      "rows_truncated": false,
+      "scalar": 625,
+      "duration_ms": 1.5,
+      "verified_at": "2026-11-11T11:55:39.036268+00:00"
+    },
+    "ex_gross_item_value": {
+      "id": "ex_gross_item_value",
+      "columns": [
+        "gross_item_value"
+      ],
+      "row_count": 1,
+      "rows": [
+        [
+          "13591643.70"
+        ]
+      ],
+      "rows_truncated": false,
+      "scalar": "13591643.70",
+      "duration_ms": 23.4,
+      "verified_at": "2026-11-11T11:55:39.052349+00:00"
+    },
+    "ex_freight_value": {
+      "id": "ex_freight_value",
+      "columns": [
+        "total_freight_value"
+      ],
+      "row_count": 1,
+      "rows": [
+        [
+          "2251909.54"
+        ]
+      ],
+      "rows_truncated": false,
+      "scalar": "2251909.54",
+      "duration_ms": 21.7,
+      "verified_at": "2026-11-11T11:55:39.069451+00:00"
+    },
+    "ex_delivered_orders": {
+      "id": "ex_delivered_orders",
+      "columns": [
+        "delivered_orders"
+      ],
+      "row_count": 1,
+      "rows": [
+        [
+          96478
+        ]
+      ],
+      "rows_truncated": false,
+      "scalar": 96478,
+      "duration_ms": 8.3,
+      "verified_at": "2026-11-11T11:55:39.085873+00:00"
+    },
+    "ex_cancellation_rate": {
+      "id": "ex_cancellation_rate",
+      "columns": [
+        "cancellation_rate_pct"
+      ],
+      "row_count": 1,
+      "rows": [
+        [
+          "0.63"
+        ]
+      ],
+      "rows_truncated": false,
+      "scalar": "0.63",
+      "duration_ms": 10.3,
+      "verified_at": "2026-11-11T11:55:39.091280+00:00"
+    },
+    "ex_average_delivery_time": {
+      "id": "ex_average_delivery_time",
+      "columns": [
+        "avg_delivery_days"
+      ],
+      "row_count": 1,
+      "rows": [
+        [
+          "12.56"
+        ]
+      ],
+      "rows_truncated": false,
+      "scalar": "12.56",
+      "duration_ms": 54.1,
+      "verified_at": "2026-11-11T11:55:39.152477+00:00"
+    },
+    "ex_review_score": {
+      "id": "ex_review_score",
+      "columns": [
+        "avg_review_score"
+      ],
+      "row_count": 1,
+      "rows": [
+        [
+          "4.09"
+        ]
+      ],
+      "rows_truncated": false,
+      "scalar": "4.09",
+      "duration_ms": 18.6,
+      "verified_at": "2026-11-11T11:55:39.172139+00:00"
+    },
+    "ex_revenue_by_category": {
+      "id": "ex_revenue_by_category",
+      "columns": [
+        "category",
+        "gross_item_value"
+      ],
+      "row_count": 5,
+      "rows": [
+        [
+          "health_beauty",
+          "1258681.34"
+        ],
+        [
+          "watches_gifts",
+          "1205005.68"
+        ],
+        [
+          "bed_bath_table",
+          "1036988.68"
+        ],
+        [
+          "sports_leisure",
+          "988048.97"
+        ],
+        [
+          "computers_accessories",
+          "911954.32"
+        ]
+      ],
+      "rows_truncated": false,
+      "scalar": null,
+      "duration_ms": 103.3,
+      "verified_at": "2026-11-11T11:55:39.269404+00:00"
+    },
+    "ex_monthly_orders": {
+      "id": "ex_monthly_orders",
+      "columns": [
+        "month",
+        "order_count"
+      ],
+      "row_count": 25,
+      "rows": [
+        [
+          "2016-09-01",
+          4
+        ],
+        [
+          "2016-10-01",
+          324
+        ],
+        [
+          "2016-12-01",
+          1
+        ],
+        [
+          "2017-01-01",
+          800
+        ],
+        [
+          "2017-02-01",
+          1780
+        ],
+        [
+          "2017-03-01",
+          2682
+        ],
+        [
+          "2017-04-01",
+          2404
+        ],
+        [
+          "2017-05-01",
+          3700
+        ],
+        [
+          "2017-06-01",
+          3245
+        ],
+        [
+          "2017-07-01",
+          4026
+        ],
+        [
+          "2017-08-01",
+          4331
+        ],
+        [
+          "2017-09-01",
+          4285
+        ],
+        [
+          "2017-10-01",
+          4631
+        ],
+        [
+          "2017-11-01",
+          7544
+        ],
+        [
+          "2017-12-01",
+          5673
+        ],
+        [
+          "2018-01-01",
+          7269
+        ],
+        [
+          "2018-02-01",
+          6728
+        ],
+        [
+          "2018-03-01",
+          7211
+        ],
+        [
+          "2018-04-01",
+          6939
+        ],
+        [
+          "2018-05-01",
+          6873
+        ],
+        [
+          "2018-06-01",
+          6167
+        ],
+        [
+          "2018-07-01",
+          6292
+        ],
+        [
+          "2018-08-01",
+          6512
+        ],
+        [
+          "2018-09-01",
+          16
+        ],
+        [
+          "2018-10-01",
+          4
+        ]
+      ],
+      "rows_truncated": false,
+      "scalar": null,
+      "duration_ms": 36.9,
+      "verified_at": "2026-11-11T11:55:39.301741+00:00"
+    }
+  }
+}

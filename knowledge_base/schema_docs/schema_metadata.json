@@ -1,0 +1,465 @@
+{
+  "database": "olist_copilot",
+  "generated_at": "2026-11-11T11:55:38.148179+00:00",
+  "tables": {
+    "customers": {
+      "description": "Order-side customer records: one row per order placed. The same person can appear under several customer_id values, so customer_id is not a person identifier. Count real customers with customer_unique_id.",
+      "db_comment": "Order-side customer records; one row per order. customer_unique_id identifies the actual customer (96,096 distinct across 99,441 rows).",
+      "row_count": 99441,
+      "primary_key": [
+        "customer_id"
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        "CREATE UNIQUE INDEX customers_pkey ON public.customers USING btree (customer_id)",
+        "CREATE INDEX idx_customers_unique_id ON public.customers USING btree (customer_unique_id)"
+      ],
+      "columns": {
+        "customer_id": {
+          "data_type": "character varying(32)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Primary key. Customer record attached to one order; referenced by orders.customer_id. 99,441 distinct values."
+        },
+        "customer_unique_id": {
+          "data_type": "character varying(32)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Identifier of the actual customer (person). Repeats across orders from the same person: 96,096 distinct values across 99,441 rows. Use COUNT(DISTINCT customer_unique_id) for customer counts."
+        },
+        "customer_zip_code_prefix": {
+          "data_type": "integer",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": "First digits of the CEP postal code. Source stores it as an integer, so leading zeros are lost (e.g. 1037 means 01037).",
+          "description": "First digits of the customer's CEP postal code. The source stores it as an integer, so leading zeros are lost (e.g. 1037 means 01037). Do not zero-pad silently."
+        },
+        "customer_city": {
+          "data_type": "character varying(100)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Customer city name in Portuguese, lowercase in the source (e.g. 'sao paulo')."
+        },
+        "customer_state": {
+          "data_type": "character varying(2)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Customer state as a 2-letter Brazilian UF code (e.g. SP, RJ). 27 distinct values."
+        }
+      }
+    },
+    "order_items": {
+      "description": "Order line items (112,650 rows). Grain is one row per unit: buying 3 units of a product creates 3 rows with order_item_id 1..3. Quantity is a count of rows, not a column. Price and freight are per-unit monetary values in BRL.",
+      "db_comment": "Order line items: quantity is represented by one row per unit (order_item_id). price is item value; freight_value is the shipping cost allocated to the item.",
+      "row_count": 112650,
+      "primary_key": [
+        "order_id",
+        "order_item_id"
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "order_id"
+          ],
+          "referenced_table": "orders",
+          "referenced_columns": [
+            "order_id"
+          ]
+        },
+        {
+          "columns": [
+            "product_id"
+          ],
+          "referenced_table": "products",
+          "referenced_columns": [
+            "product_id"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_order_items_product ON public.order_items USING btree (product_id)",
+        "CREATE INDEX idx_order_items_seller ON public.order_items USING btree (seller_id)",
+        "CREATE UNIQUE INDEX order_items_pkey ON public.order_items USING btree (order_id, order_item_id)"
+      ],
+      "columns": {
+        "order_id": {
+          "data_type": "character varying(32)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Foreign key to orders.order_id; part of the composite primary key (order_id, order_item_id)."
+        },
+        "order_item_id": {
+          "data_type": "integer",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Sequence number of the unit within the order (1 to 21). Part of the composite primary key."
+        },
+        "product_id": {
+          "data_type": "character varying(32)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Foreign key to products.product_id."
+        },
+        "seller_id": {
+          "data_type": "character varying(32)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": "FK to sellers deferred until the sellers table is imported; all values verified against the source sellers CSV.",
+          "description": "Seller that fulfilled this item. All values verified against the source sellers CSV, but the FK is deferred until the sellers table is imported."
+        },
+        "shipping_limit_date": {
+          "data_type": "timestamp without time zone",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Deadline for the seller to hand the item to the carrier."
+        },
+        "price": {
+          "data_type": "numeric(10,2)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Merchandise value of one unit in BRL, numeric(10,2). Excludes freight. SUM(price) is gross item value — NOT net revenue (refunds are not observable in this dataset)."
+        },
+        "freight_value": {
+          "data_type": "numeric(10,2)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Shipping value allocated to this item in BRL, numeric(10,2). SUM(freight_value) gives total freight charged."
+        }
+      }
+    },
+    "order_payments": {
+      "description": "Payment transactions (103,886 rows). An order can have multiple payment rows (e.g. voucher plus credit card); sum payment_value per order for the total paid. Exactly one order has no payment row.",
+      "db_comment": "Payment transactions per order (order_id + payment_sequential). payment_value includes freight; one order in the dataset has no payment row.",
+      "row_count": 103886,
+      "primary_key": [
+        "order_id",
+        "payment_sequential"
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "order_id"
+          ],
+          "referenced_table": "orders",
+          "referenced_columns": [
+            "order_id"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX order_payments_pkey ON public.order_payments USING btree (order_id, payment_sequential)"
+      ],
+      "columns": {
+        "order_id": {
+          "data_type": "character varying(32)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Foreign key to orders.order_id; part of the composite primary key (order_id, payment_sequential)."
+        },
+        "payment_sequential": {
+          "data_type": "integer",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Sequence number of the payment transaction within the order. Part of the composite primary key."
+        },
+        "payment_type": {
+          "data_type": "character varying(20)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "One of: credit_card, boleto, debit_card, voucher, not_defined."
+        },
+        "payment_installments": {
+          "data_type": "integer",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Number of installments chosen for the payment (observed range 0 to 24)."
+        },
+        "payment_value": {
+          "data_type": "numeric(10,2)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Transaction value in BRL, numeric(10,2). Includes freight. SUM over an order's rows equals the total paid for that order."
+        }
+      }
+    },
+    "order_reviews": {
+      "description": "Customer reviews (99,224 rows). Primary key is (review_id, order_id) because review_id alone repeats across orders (1,603 rows share a review_id). Scores are 1-5; comment text is mostly NULL.",
+      "db_comment": "One row per review; PK (review_id, order_id) because review_id alone repeats across orders. review_score is 1-5. Comment title/message are mostly NULL.",
+      "row_count": 99224,
+      "primary_key": [
+        "review_id",
+        "order_id"
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "order_id"
+          ],
+          "referenced_table": "orders",
+          "referenced_columns": [
+            "order_id"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_order_reviews_order ON public.order_reviews USING btree (order_id)",
+        "CREATE UNIQUE INDEX order_reviews_pkey ON public.order_reviews USING btree (review_id, order_id)"
+      ],
+      "columns": {
+        "review_id": {
+          "data_type": "character varying(32)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Review identifier. NOT unique on its own — the same review can appear for multiple orders. Part of the composite primary key."
+        },
+        "order_id": {
+          "data_type": "character varying(32)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Foreign key to orders.order_id; part of the composite primary key. An order may have more than one review."
+        },
+        "review_score": {
+          "data_type": "integer",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Review score from 1 to 5 stars (CHECK constraint enforced)."
+        },
+        "review_comment_title": {
+          "data_type": "text",
+          "is_nullable": true,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Optional review title in Portuguese. NULL for 87,656 rows."
+        },
+        "review_comment_message": {
+          "data_type": "text",
+          "is_nullable": true,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Optional review message in Portuguese. NULL for 58,247 rows."
+        },
+        "review_creation_date": {
+          "data_type": "timestamp without time zone",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Date the review was created (time component is midnight)."
+        },
+        "review_answer_timestamp": {
+          "data_type": "timestamp without time zone",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Timestamp when the review was answered/processed."
+        }
+      }
+    },
+    "orders": {
+      "description": "One row per order with lifecycle timestamps and a final status snapshot. Central table joining customers, order_items, order_payments and order_reviews. Purchase timestamps range from 2016-09-04 to 2018-10-17.",
+      "db_comment": "One row per order with lifecycle timestamps. order_status: approved, canceled, created, delivered, invoiced, processing, shipped, unavailable.",
+      "row_count": 99441,
+      "primary_key": [
+        "order_id"
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "customer_id"
+          ],
+          "referenced_table": "customers",
+          "referenced_columns": [
+            "customer_id"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_orders_customer_id ON public.orders USING btree (customer_id)",
+        "CREATE INDEX idx_orders_purchase_ts ON public.orders USING btree (order_purchase_timestamp)",
+        "CREATE INDEX idx_orders_status ON public.orders USING btree (order_status)",
+        "CREATE UNIQUE INDEX orders_pkey ON public.orders USING btree (order_id)"
+      ],
+      "columns": {
+        "order_id": {
+          "data_type": "character varying(32)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Primary key. Unique order identifier (32-char hex)."
+        },
+        "customer_id": {
+          "data_type": "character varying(32)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Foreign key to customers.customer_id. Identifies the order-side customer record, not necessarily a unique person."
+        },
+        "order_status": {
+          "data_type": "character varying(20)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Final status snapshot. One of: approved, canceled, created, delivered, invoiced, processing, shipped, unavailable. 'canceled' (625 orders) and 'unavailable' (609 orders) are distinct outcomes; 96,478 orders are delivered."
+        },
+        "order_purchase_timestamp": {
+          "data_type": "timestamp without time zone",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "When the order was placed. Never NULL. Anchor timestamp for time-series analysis."
+        },
+        "order_approved_at": {
+          "data_type": "timestamp without time zone",
+          "is_nullable": true,
+          "column_default": null,
+          "db_comment": null,
+          "description": "When the order was approved (payment confirmation). NULL for 160 orders that were never approved."
+        },
+        "order_delivered_carrier_date": {
+          "data_type": "timestamp without time zone",
+          "is_nullable": true,
+          "column_default": null,
+          "db_comment": null,
+          "description": "When the order was handed to the carrier. NULL for 1,783 orders."
+        },
+        "order_delivered_customer_date": {
+          "data_type": "timestamp without time zone",
+          "is_nullable": true,
+          "column_default": null,
+          "db_comment": null,
+          "description": "When the customer received the order. NULL for 2,965 orders, including 8 orders whose status is 'delivered'."
+        },
+        "order_estimated_delivery_date": {
+          "data_type": "timestamp without time zone",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Delivery date promised to the customer at purchase time. Never NULL. Useful for on-time-delivery analysis."
+        }
+      }
+    },
+    "product_category_translation": {
+      "description": "Lookup table mapping Portuguese category names to English (71 rows). Incomplete: the categories 'pc_gamer' and 'portateis_cozinha_e_preparadores_de_alimentos' used by 13 products are missing. Always LEFT JOIN; never assume a translation exists.",
+      "db_comment": "Portuguese-to-English category lookup (71 rows). Incomplete: pc_gamer and portateis_cozinha_e_preparadores_de_alimentos are missing; join with LEFT JOIN.",
+      "row_count": 71,
+      "primary_key": [
+        "product_category_name"
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        "CREATE UNIQUE INDEX product_category_translation_pkey ON public.product_category_translation USING btree (product_category_name)"
+      ],
+      "columns": {
+        "product_category_name": {
+          "data_type": "character varying(100)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Primary key. Portuguese category name exactly as used in products.product_category_name."
+        },
+        "product_category_name_english": {
+          "data_type": "character varying(100)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "English category name (e.g. 'health_beauty'). Unique."
+        }
+      }
+    },
+    "products": {
+      "description": "One row per product (32,951). Category and physical attributes are nullable. Column names intentionally keep the source CSV's 'lenght' misspelling.",
+      "db_comment": "One row per product. Category and attribute columns are nullable; column names keep the source spelling (e.g. product_name_lenght).",
+      "row_count": 32951,
+      "primary_key": [
+        "product_id"
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        "CREATE INDEX idx_products_category ON public.products USING btree (product_category_name)",
+        "CREATE UNIQUE INDEX products_pkey ON public.products USING btree (product_id)"
+      ],
+      "columns": {
+        "product_id": {
+          "data_type": "character varying(32)",
+          "is_nullable": false,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Primary key. Unique product identifier (32-char hex)."
+        },
+        "product_category_name": {
+          "data_type": "character varying(100)",
+          "is_nullable": true,
+          "column_default": null,
+          "db_comment": "No enforced FK: 13 products reference categories missing from product_category_translation. 610 products have NULL category.",
+          "description": "Portuguese category name. NULL for 610 products; 13 products use categories absent from product_category_translation. No enforced foreign key — join with LEFT JOIN."
+        },
+        "product_name_lenght": {
+          "data_type": "integer",
+          "is_nullable": true,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Number of characters in the product name (source spelling: 'lenght'). NULL for 610 products."
+        },
+        "product_description_lenght": {
+          "data_type": "integer",
+          "is_nullable": true,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Number of characters in the product description (source spelling: 'lenght'). NULL for 610 products."
+        },
+        "product_photos_qty": {
+          "data_type": "integer",
+          "is_nullable": true,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Number of product photos on the listing. NULL for 610 products."
+        },
+        "product_weight_g": {
+          "data_type": "integer",
+          "is_nullable": true,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Product weight in grams. NULL for 2 products."
+        },
+        "product_length_cm": {
+          "data_type": "integer",
+          "is_nullable": true,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Product length in centimeters. NULL for 2 products."
+        },
+        "product_height_cm": {
+          "data_type": "integer",
+          "is_nullable": true,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Product height in centimeters. NULL for 2 products."
+        },
+        "product_width_cm": {
+          "data_type": "integer",
+          "is_nullable": true,
+          "column_default": null,
+          "db_comment": null,
+          "description": "Product width in centimeters. NULL for 2 products."
+        }
+      }
+    }
+  }
+}

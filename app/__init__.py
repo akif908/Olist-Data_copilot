@@ -1,0 +1,1 @@
+"""Data Analyst Copilot — application package."""

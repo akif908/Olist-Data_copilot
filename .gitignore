@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+
+# Environment / secrets — never commit credentials
+.env
+
+# Raw dataset files (obtain from Kaggle, see README)
+data/*.csv
+
+# IDE / OS
+.vscode/
+.DS_Store
+Thumbs.db
