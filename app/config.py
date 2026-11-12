@@ -35,3 +35,29 @@ class DatabaseSettings:
             user=os.getenv("PGUSER", "postgres"),
             password=os.getenv("PGPASSWORD", ""),
         )
+
+
+@dataclass(frozen=True)
+class LLMSettings:
+    """Provider-independent LLM settings.
+
+    Reads LLM_PROVIDER and then <PROVIDER>_API_KEY / <PROVIDER>_MODEL /
+    <PROVIDER>_BASE_URL, so adding a provider needs no config changes.
+    The API key is never logged or serialized.
+    """
+
+    provider: str
+    api_key: str
+    model: str
+    base_url: str
+
+    @classmethod
+    def from_env(cls) -> LLMSettings:
+        provider = os.getenv("LLM_PROVIDER", "openrouter").strip().lower()
+        prefix = provider.upper()
+        return cls(
+            provider=provider,
+            api_key=os.getenv(f"{prefix}_API_KEY", ""),
+            model=os.getenv(f"{prefix}_MODEL", ""),
+            base_url=os.getenv(f"{prefix}_BASE_URL", ""),
+        )

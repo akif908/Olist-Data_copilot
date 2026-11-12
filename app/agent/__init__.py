@@ -1,0 +1,1 @@
+"""Copilot agent modules (orchestration, SQL generation, execution)."""

@@ -11,8 +11,9 @@ generation.
 
 ## Tech stack
 
-Python 3.11 · FastAPI · Streamlit · PostgreSQL 18 · Pandas · Google Gemini
-(provider-independent LLM layer) · ChromaDB · SQLGlot · Plotly · Pytest · Docker
+Python 3.11 · FastAPI · Streamlit · PostgreSQL 18 · Pandas · OpenRouter
+(provider-independent LLM layer; Gemini/Groq pluggable) · ChromaDB · SQLGlot ·
+Plotly · Pytest · Docker
 
 ## Project status
 
@@ -20,7 +21,7 @@ Python 3.11 · FastAPI · Streamlit · PostgreSQL 18 · Pandas · Google Gemini
 |---|---|---|
 | 1 | Environment & database foundation | Complete — 32/32 tests passing |
 | 2 | Database metadata & business knowledge | Complete — 66/66 tests passing |
-| 3 | LLM integration & SQL generation | Planned |
+| 3 | LLM integration & SQL generation | Complete — 92/92 tests passing |
 | 4 | RAG integration | Planned |
 | 5 | SQL validation & safe execution | Planned |
 | 6 | SQL error handling & correction | Planned |
@@ -40,8 +41,11 @@ Python 3.11 · FastAPI · Streamlit · PostgreSQL 18 · Pandas · Google Gemini
    python -m pip install -r requirements.txt
    ```
 
-3. **Credentials:** copy `.env.example` to `.env` and set your PostgreSQL password.
-   `.env` is gitignored — never commit credentials.
+3. **Credentials:** copy `.env.example` to `.env` and set your PostgreSQL
+   password and your OpenRouter API key (`OPENROUTER_API_KEY`, from
+   <https://openrouter.ai/keys>). `.env` is gitignored — never commit credentials.
+   The default model is `cohere/north-mini-code:free`; change `OPENROUTER_MODEL`
+   to use another. The LLM layer is provider-independent (`app/llm/`).
 4. **Dataset:** download the Olist CSVs from Kaggle and place them in `data/`
    (raw CSVs are gitignored). Expected files: `olist_customers_dataset.csv`,
    `olist_orders_dataset.csv`, `olist_order_items_dataset.csv`,
@@ -74,6 +78,20 @@ Python 3.11 · FastAPI · Streamlit · PostgreSQL 18 · Pandas · Google Gemini
    ```powershell
    python -m pytest
    ```
+
+## Ask a question (Phase 3)
+
+```powershell
+python -m scripts.ask "How many orders are in the database?"
+python -m scripts.ask "Which five product categories generated the highest revenue?" --execute
+python -m scripts.ask --list-models   # free OpenRouter models
+```
+
+The generated SQL is **displayed for review, not executed automatically**.
+`--execute` is a developer convenience that runs the query in a read-only
+transaction with a statement timeout; the full safe executor arrives in Phase 5.
+Questions the database cannot answer (e.g. net profit — no cost/refund fields)
+are identified as unanswerable with a reason, never guessed.
 
 ## Repository structure
 
