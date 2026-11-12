@@ -1,0 +1,103 @@
+{
+  "version": "1.0",
+  "description": "Manually verified retrieval evaluation set for Phase 4. Each question is paraphrased (not copied verbatim from the SQL examples) to test semantic generalization. The 'relevant' lists are the ground-truth knowledge chunks that SHOULD be retrieved, curated by hand against knowledge_base/ (glossary metrics, unsupported metrics, verified examples, and schema tables). Recall@K measures how many of these appear in the top-K results.",
+  "k_values": [1, 3, 5],
+  "questions": [
+    {
+      "id": "q_order_count",
+      "question": "How many orders were placed in total?",
+      "category": "metric",
+      "relevant": ["metric:order_count", "example:ex_order_count"]
+    },
+    {
+      "id": "q_customer_count",
+      "question": "Count the distinct people who bought something.",
+      "category": "metric",
+      "relevant": ["metric:customer_count", "example:ex_customer_count"]
+    },
+    {
+      "id": "q_aov",
+      "question": "What is the typical amount paid per order?",
+      "category": "metric",
+      "relevant": ["metric:average_order_value", "example:ex_average_order_value"]
+    },
+    {
+      "id": "q_gross_item_value",
+      "question": "Total value of all merchandise sold, excluding shipping.",
+      "category": "metric",
+      "relevant": ["metric:gross_item_value", "example:ex_gross_item_value"]
+    },
+    {
+      "id": "q_freight",
+      "question": "How much did customers pay for shipping overall?",
+      "category": "metric",
+      "relevant": ["metric:freight_value", "example:ex_freight_value"]
+    },
+    {
+      "id": "q_delivered",
+      "question": "How many orders actually reached the customer?",
+      "category": "metric",
+      "relevant": ["metric:delivered_orders", "example:ex_delivered_orders"]
+    },
+    {
+      "id": "q_cancellation_rate",
+      "question": "What share of orders was cancelled?",
+      "category": "metric",
+      "relevant": ["metric:cancellation_rate", "example:ex_cancellation_rate"]
+    },
+    {
+      "id": "q_delivery_time",
+      "question": "On average, how many days does delivery take?",
+      "category": "metric",
+      "relevant": ["metric:average_delivery_time", "example:ex_average_delivery_time"]
+    },
+    {
+      "id": "q_review_score",
+      "question": "What is the mean customer rating?",
+      "category": "metric",
+      "relevant": ["metric:review_score", "example:ex_review_score"]
+    },
+    {
+      "id": "q_net_revenue",
+      "question": "What is the net revenue after refunds?",
+      "category": "unsupported",
+      "relevant": ["unsupported_metric:net_revenue"]
+    },
+    {
+      "id": "q_profit",
+      "question": "Calculate the profit margin per product.",
+      "category": "unsupported",
+      "relevant": ["unsupported_metric:profit"]
+    },
+    {
+      "id": "q_top_categories_items",
+      "question": "Which product categories sell the most items?",
+      "category": "join",
+      "relevant": ["example:ex_top_categories_by_items", "schema:products"]
+    },
+    {
+      "id": "q_revenue_by_category",
+      "question": "Top product categories by money earned.",
+      "category": "join",
+      "relevant": ["example:ex_revenue_by_category", "metric:gross_item_value"]
+    },
+    {
+      "id": "q_monthly_orders",
+      "question": "Show order counts month by month.",
+      "category": "time",
+      "relevant": ["example:ex_monthly_orders", "schema:orders"]
+    },
+    {
+      "id": "q_order_customer_link",
+      "question": "Which tables link an order to the buyer who placed it?",
+      "category": "schema",
+      "relevant": ["schema:orders", "schema:customers"]
+    },
+    {
+      "id": "q_canceled_not_unavailable",
+      "question": "How many orders were cancelled, excluding unavailable ones?",
+      "category": "metric",
+      "relevant": ["example:ex_canceled_orders", "metric:cancellation_rate"]
+    }
+  ]
+}

@@ -61,3 +61,41 @@ class LLMSettings:
             model=os.getenv(f"{prefix}_MODEL", ""),
             base_url=os.getenv(f"{prefix}_BASE_URL", ""),
         )
+
+
+@dataclass(frozen=True)
+class EmbeddingSettings:
+    """Provider-independent embedding settings (Phase 4 RAG).
+
+    Reads EMBEDDING_PROVIDER and then <PROVIDER>_EMBEDDING_MODEL. The API key and
+    base URL fall back to the shared <PROVIDER>_API_KEY / <PROVIDER>_BASE_URL so a
+    single OpenRouter key serves both chat and embeddings. A dedicated
+    <PROVIDER>_EMBEDDING_API_KEY / _EMBEDDING_BASE_URL can override them.
+
+    The model is used verbatim; nothing here silently substitutes another model.
+    The API key is never logged or serialized.
+    """
+
+    provider: str
+    api_key: str
+    model: str
+    base_url: str
+
+    @classmethod
+    def from_env(cls) -> EmbeddingSettings:
+        provider = os.getenv("EMBEDDING_PROVIDER", "openrouter").strip().lower()
+        prefix = provider.upper()
+        api_key = (
+            os.getenv(f"{prefix}_EMBEDDING_API_KEY")
+            or os.getenv(f"{prefix}_API_KEY", "")
+        )
+        base_url = (
+            os.getenv(f"{prefix}_EMBEDDING_BASE_URL")
+            or os.getenv(f"{prefix}_BASE_URL", "")
+        )
+        return cls(
+            provider=provider,
+            api_key=api_key,
+            model=os.getenv(f"{prefix}_EMBEDDING_MODEL", ""),
+            base_url=base_url,
+        )

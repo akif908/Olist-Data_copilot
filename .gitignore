@@ -11,6 +11,9 @@ __pycache__/
 # Raw dataset files (obtain from Kaggle, see README)
 data/*.csv
 
+# Generated RAG vector store (rebuild with: python -m scripts.ingest_knowledge)
+chroma_db/
+
 # IDE / OS
 .vscode/
 .DS_Store

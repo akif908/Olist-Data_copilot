@@ -16,9 +16,13 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from app.config import PROJECT_ROOT
 from app.llm.base import LLMResult, LLMService
+
+if TYPE_CHECKING:  # avoid a runtime circular import (rag -> chunking -> here)
+    from app.rag.retriever import RetrievedChunk, Retriever
 
 KNOWLEDGE_DIR = PROJECT_ROOT / "knowledge_base"
 
@@ -38,6 +42,8 @@ class SQLGenerationResult:
     model: str
     prompt_tokens: int | None
     completion_tokens: int | None
+    # Phase 4 (additive): provenance of retrieved knowledge, empty when RAG is off.
+    retrieved_sources: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -146,6 +152,21 @@ def build_prompt(question: str, kb: KnowledgeBase) -> str:
     ])
 
 
+def build_rag_prompt(question: str, chunks: list["RetrievedChunk"]) -> str:
+    """Phase 4: ground the prompt in retrieved knowledge only (RAG).
+
+    Uses the same chunk text stored in the vector index, ordered by similarity.
+    The full KnowledgeBase is still loaded by generate_sql for anti-fabrication
+    validation, but the model sees only the retrieved, relevant context.
+    """
+    lines = ["=== RETRIEVED KNOWLEDGE (verified; most relevant first) ==="]
+    for c in chunks:
+        lines.append(f"\n[{c.label()} | similarity {c.score:.3f}]")
+        lines.append(c.text)
+    lines.append(f"\n=== USER QUESTION ===\n{question}")
+    return "\n".join(lines)
+
+
 def parse_json_response(text: str) -> dict:
     """Parse a JSON object from model output, tolerating fences/prose."""
     s = text.strip()
@@ -164,7 +185,12 @@ def parse_json_response(text: str) -> dict:
     raise SQLGenerationError("LLM did not return a valid JSON object")
 
 
-def _validate_result(data: dict, kb: KnowledgeBase, llm_result: LLMResult) -> SQLGenerationResult:
+def _validate_result(
+    data: dict,
+    kb: KnowledgeBase,
+    llm_result: LLMResult,
+    retrieved_sources: tuple[str, ...] = (),
+) -> SQLGenerationResult:
     answerable = bool(data.get("answerable"))
     tables_used = tuple(str(t) for t in (data.get("tables_used") or []))
     metrics_used = tuple(str(m) for m in (data.get("metrics_used") or []))
@@ -201,6 +227,7 @@ def _validate_result(data: dict, kb: KnowledgeBase, llm_result: LLMResult) -> SQ
         model=llm_result.model,
         prompt_tokens=llm_result.prompt_tokens,
         completion_tokens=llm_result.completion_tokens,
+        retrieved_sources=retrieved_sources,
     )
 
 
@@ -208,8 +235,15 @@ def generate_sql(
     question: str,
     llm: LLMService,
     kb: KnowledgeBase | None = None,
+    retriever: "Retriever | None" = None,
+    k: int = 8,
 ) -> SQLGenerationResult:
     """Generate SQL for a natural-language question. Does not execute it.
+
+    Phase 3 path (retriever=None): ground the prompt in the full knowledge base.
+    Phase 4 path (retriever provided): ground the prompt in the top-k retrieved
+    chunks only, and record their provenance in ``retrieved_sources``. The full
+    KnowledgeBase is still loaded for anti-fabrication validation either way.
 
     Reasoning models sometimes spend their token budget on reasoning and
     emit truncated or non-JSON output. We allow one extra attempt with a
@@ -217,7 +251,13 @@ def generate_sql(
     with metadata re-retrieval is Phase 6.)
     """
     kb = kb or KnowledgeBase.load()
-    base_prompt = build_prompt(question, kb)
+    retrieved_sources: tuple[str, ...] = ()
+    if retriever is not None:
+        chunks = retriever.retrieve(question, k=k)
+        retrieved_sources = tuple(c.label() for c in chunks)
+        base_prompt = build_rag_prompt(question, chunks)
+    else:
+        base_prompt = build_prompt(question, kb)
     prompt = base_prompt
     last_error: SQLGenerationError | None = None
     for attempt in range(2):
@@ -236,4 +276,4 @@ def generate_sql(
             )
     else:
         raise last_error  # type: ignore[misc]
-    return _validate_result(data, kb, llm_result)
+    return _validate_result(data, kb, llm_result, retrieved_sources)

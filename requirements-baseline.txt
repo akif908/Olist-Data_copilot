@@ -1,0 +1,4 @@
+# Optional: local sentence-transformer baseline for retrieval comparison.
+# Heavy (pulls PyTorch). Install only if you want to run the baseline:
+#   python -m pip install -r requirements-baseline.txt
+sentence-transformers>=3.0,<4
