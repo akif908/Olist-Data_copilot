@@ -9,3 +9,8 @@ httpx>=0.27,<1
 
 # Phase 4: RAG (vector store)
 chromadb>=0.5,<2
+
+# Phase 5: SQL validation (AST inspection). Pinned to a specific tested version
+# because the validator depends on SQLGlot's expression class names and qualify()
+# behavior, which can change between releases (refinement #8).
+sqlglot==30.35.0

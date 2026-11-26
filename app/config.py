@@ -38,6 +38,33 @@ class DatabaseSettings:
 
 
 @dataclass(frozen=True)
+class ReadOnlyDatabaseSettings:
+    """Dedicated read-only role for executing generated queries (Phase 5, L3).
+
+    Kept separate from the admin/import DatabaseSettings (refinement #9). Shares
+    host/port/dbname with the admin connection but authenticates as PG_RO_USER
+    (default ``copilot_ro``) with PG_RO_PASSWORD. The password is read from the
+    environment only and is never logged or serialized.
+    """
+
+    host: str
+    port: int
+    dbname: str
+    user: str
+    password: str
+
+    @classmethod
+    def from_env(cls) -> ReadOnlyDatabaseSettings:
+        return cls(
+            host=os.getenv("PGHOST", "localhost"),
+            port=int(os.getenv("PGPORT", "5432")),
+            dbname=os.getenv("PGDATABASE", "olist_copilot"),
+            user=os.getenv("PG_RO_USER", "copilot_ro"),
+            password=os.getenv("PG_RO_PASSWORD", ""),
+        )
+
+
+@dataclass(frozen=True)
 class LLMSettings:
     """Provider-independent LLM settings.
 
